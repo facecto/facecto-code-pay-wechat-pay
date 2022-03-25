@@ -1,0 +1,81 @@
+package com.facecto.code.pay.wechat.entity;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import lombok.ToString;
+import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+
+/**
+ * @author Jon So, https://facecto.com, https://github.com/facecto
+ * @version v1.0.0
+ */
+@Data
+@Accessors(chain = true)
+@ToString
+public class RefundNoticeResourceOrigin implements Serializable {
+    /**
+     * 直连商户号
+     * string[1,32]
+     * 必
+     */
+    @JsonProperty("mchid")
+    private String mchid;
+    /**
+     * 商户订单号
+     * string[1,32]
+     * 必
+     */
+    @JsonProperty("out_trade_no")
+    private String outTradeNo;
+    /**
+     * 微信支付订单号
+     * string[1,32]
+     * 必
+     */
+    @JsonProperty("transaction_id")
+    private String transactionId;
+    /**
+     * 商户退款单号
+     * string[1,64]
+     * 必
+     */
+    @JsonProperty("out_refund_no")
+    private String outRefundNo;
+    /**
+     * 微信支付退款单号
+     * string[1,32]
+     * 必
+     */
+    @JsonProperty("refund_id")
+    private String refundId;
+    /**
+     * 退款状态
+     * string[1,16]
+     * 必
+     */
+    @JsonProperty("refund_status")
+    private String refundStatus;
+    /**
+     * 退款成功时间
+     * string[1,64]
+     * 否
+     */
+    @JsonProperty("success_time")
+    private String successTime;
+    /**
+     * 退款入账账户
+     * string[1,64]
+     * 必
+     */
+    @JsonProperty("user_received_account")
+    private String userReceivedAccount;
+    /**
+     * 金额信息
+     * 必
+     */
+    @JsonProperty("amount")
+    private AmountRefundNotice amount;
+}
+
