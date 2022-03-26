@@ -32,60 +32,63 @@ public class WechatHttp {
 
     /**
      * 发起HTTP请求，并返回实体
-     * @param url 目标URL
+     *
+     * @param url  目标URL
      * @param json 参数（GET参数）
-     * @param t 目标实体.class
-     * @param <T> 目标实体
+     * @param t    目标实体.class
+     * @param <T>  目标实体
      * @return 目标实体
      */
     public static <T> T httpGet(String url, String json, Class<T> t) {
         try {
-            HttpResponse response = getGetResponse(url,json);
+            HttpResponse response = getGetResponse(url, json);
             int statusCode = response.getStatusLine().getStatusCode();
-            String result =null;
+            String result = null;
             if (statusCode == WechatConstant.STATUS_CODE_OK) {
                 result = EntityUtils.toString(response.getEntity(), "UTF-8");
             }
-            return getTbyResult(t,statusCode, result, t.newInstance());
-        } catch (Exception e){
+            return getTbyResult(t, statusCode, result, t.newInstance());
+        } catch (Exception e) {
             throw new CodeException("执行http请求失败！");
         }
     }
 
     /**
      * 发起Post请求
-     * @param url 目标URL
+     *
+     * @param url  目标URL
      * @param json 参数（POST参数）
-     * @param t 目标实体.class
-     * @param <T> 目标实体
+     * @param t    目标实体.class
+     * @param <T>  目标实体
      * @return 目标实体
      */
-    public static <T> T httpPost(String url, String json, Class<T> t){
+    public static <T> T httpPost(String url, String json, Class<T> t) {
         try {
-            HttpResponse response = getPostResponse(url,json);
+            HttpResponse response = getPostResponse(url, json);
             int statusCode = response.getStatusLine().getStatusCode();
-            String result =null;
+            String result = null;
             if (statusCode == WechatConstant.STATUS_CODE_OK) {
                 result = EntityUtils.toString(response.getEntity(), "UTF-8");
             }
             return getTbyResult(t, statusCode, result, t.newInstance());
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new CodeException("执行http请求失败！");
         }
     }
 
     /**
      * 将JSON文本转换成目标实体类
-     * @param t 目标实体
+     *
+     * @param t          目标实体
      * @param statusCode http状态码
      * @param jsonString JsonString
-     * @param instance 实例
-     * @param <T> 目标类
+     * @param instance   实例
+     * @param <T>        目标类
      * @return 目标类
      */
     private static <T> T getTbyResult(Class<T> t, int statusCode, String jsonString, T instance) {
         JSONObject jsonObject = JSON.parseObject(jsonString);
-        jsonObject.put("statusCode",statusCode);
+        jsonObject.put("statusCode", statusCode);
         if (instance instanceof JSONObject) {
             return (T) jsonObject;
         }
@@ -95,11 +98,12 @@ public class WechatHttp {
 
     /**
      * 获得POST方法返回body
+     *
      * @param url
      * @param json
      * @return response
      */
-    private static HttpResponse getPostResponse(String url, String json){
+    private static HttpResponse getPostResponse(String url, String json) {
         String token = httpToken(WechatConstant.POST, url, json);
         HttpPost httppost = new HttpPost(url);
         httppost.addHeader(WechatConstant.CONTENT_TYPE_NAME, WechatConstant.CONTENT_TYPE_VALUE);
@@ -119,16 +123,17 @@ public class WechatHttp {
             HttpResponse response = httpClient.execute(httppost);
             httpClient.close();
             return response;
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new CodeException("执行http请求失败！");
         }
     }
 
     /**
      * get http token
-     * @param method GET POST
+     *
+     * @param method    GET POST
      * @param urlString URL
-     * @param body Post method with JSON, Get method with ""
+     * @param body      Post method with JSON, Get method with ""
      * @return token
      * @throws Exception
      */
@@ -144,11 +149,12 @@ public class WechatHttp {
 
     /**
      * 获得GET方法返回body
-     * @param url url
+     *
+     * @param url  url
      * @param json json
      * @return body
      */
-    private static HttpResponse getGetResponse(String url, String json){
+    private static HttpResponse getGetResponse(String url, String json) {
         String token = httpToken(WechatConstant.GET, url, json);
         HttpGet httpget = new HttpGet(url);
         httpget.addHeader(WechatConstant.CONTENT_TYPE_NAME, WechatConstant.CONTENT_TYPE_VALUE);
@@ -159,26 +165,27 @@ public class WechatHttp {
             HttpResponse response = httpClient.execute(httpget);
             httpClient.close();
             return response;
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new CodeException("执行http请求失败！");
         }
     }
 
     /**
      * Get http sign
-     * @param method GET POST
+     *
+     * @param method    GET POST
      * @param urlString URL
-     * @param body Post method with JSON, Get method with ""
+     * @param body      Post method with JSON, Get method with ""
      * @param timestamp timestamp
-     * @param nonceStr Random String
+     * @param nonceStr  Random String
      * @return sign
      * @throws Exception
      */
     public static String httpSign(String method, String urlString, String body, long timestamp, String nonceStr) {
         URL url = null;
-        try{
+        try {
             url = new URL(urlString);
-        }catch (MalformedURLException e){
+        } catch (MalformedURLException e) {
             throw new CodeException("URL错误！");
         }
         String signUrl;
@@ -195,9 +202,10 @@ public class WechatHttp {
 
     /**
      * JSAPI SIGN
+     *
      * @param timestamp timestamp
      * @param nonceStr  Random String
-     * @param packages body
+     * @param packages  body
      * @return sign
      * @throws Exception
      */
@@ -209,17 +217,18 @@ public class WechatHttp {
 
     /**
      * get sign with RSA
+     *
      * @param signatureStr
      * @return sign
      * @throws Exception
      */
     public static String getSign(String signatureStr) {
-        try{
+        try {
             Signature sign = Signature.getInstance(WechatConstant.RSA);
             sign.initSign(WechatConstant.privateKey);
             sign.update(signatureStr.getBytes(StandardCharsets.UTF_8));
-            return Base64Utils.encodeToString(sign.sign());}
-        catch(Exception e){
+            return Base64Utils.encodeToString(sign.sign());
+        } catch (Exception e) {
             throw new CodeException("获得RSA签名失败！");
         }
     }

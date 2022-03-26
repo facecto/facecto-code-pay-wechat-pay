@@ -27,21 +27,21 @@ public class WechatConstant {
     public final static String FAIL_CN = "失败";
     public final static String SIGN_TYPE = "RSA";
     public final static String KEY_ALIAS = "tenpay certificate";
-    public final static String REFUND_ACCOUNT="AVAILABLE";
-    public final static String CONTENT_TYPE_NAME="Content-Type";
-    public final static String CONTENT_TYPE_VALUE="application/json;charset=UTF-8";
-    public final static String ACCEPT="Accept";
-    public final static String ACCEPT_JSON="application/json";
-    public final static String ACCEPT_HTML_XML="text/html, application/xhtml+xml, image/jxr, */*";
-    public final static String AUTHORIZATION="Authorization";
-    public final static String POST="POST";
-    public final static String GET="GET";
-    public final static String RSA="SHA256withRSA";
-    public final static String AES_NAME="AES";
-    public final static String AES_SETTING="AES/GCM/NoPadding";
-    public final static int SECOND =5000000;
-    public final static int STATUS_CODE_OK=200;
-    public final static int GCM_LENGTH=128;
+    public final static String REFUND_ACCOUNT = "AVAILABLE";
+    public final static String CONTENT_TYPE_NAME = "Content-Type";
+    public final static String CONTENT_TYPE_VALUE = "application/json;charset=UTF-8";
+    public final static String ACCEPT = "Accept";
+    public final static String ACCEPT_JSON = "application/json";
+    public final static String ACCEPT_HTML_XML = "text/html, application/xhtml+xml, image/jxr, */*";
+    public final static String AUTHORIZATION = "Authorization";
+    public final static String POST = "POST";
+    public final static String GET = "GET";
+    public final static String RSA = "SHA256withRSA";
+    public final static String AES_NAME = "AES";
+    public final static String AES_SETTING = "AES/GCM/NoPadding";
+    public final static int SECOND = 5000000;
+    public final static int STATUS_CODE_OK = 200;
+    public final static int GCM_LENGTH = 128;
     /**
      * 小程序id
      */

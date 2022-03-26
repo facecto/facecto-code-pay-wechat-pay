@@ -3,6 +3,7 @@ package com.facecto.code.pay.wechat.util;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.facecto.code.base.CodeException;
+import com.facecto.code.base.util.CodeFileUtils;
 import com.facecto.code.pay.wechat.config.WechatConstant;
 import com.facecto.code.pay.wechat.entity.WechatCertificate;
 import com.facecto.code.pay.wechat.entity.WechatEncryptCertificate;
@@ -58,6 +59,7 @@ public class WechatUtils {
 
     /**
      * 从证书文件中获取KeyStore
+     *
      * @return keystore
      * @throws KeyStoreException
      * @throws CertificateException
@@ -65,7 +67,7 @@ public class WechatUtils {
      * @throws NoSuchAlgorithmException
      */
     private static KeyStore getKeyStore() throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException {
-        BufferedInputStream bis = new BufferedInputStream(BaseUtils.getStream(WechatConstant.certUrl));
+        BufferedInputStream bis = new BufferedInputStream(CodeFileUtils.getStream(WechatConstant.certUrl));
         KeyStore ks = KeyStore.getInstance("PKCS12");
         ks.load(bis, WechatConstant.wechatMchid.toCharArray());
         return ks;
@@ -81,7 +83,7 @@ public class WechatUtils {
      * @throws NoSuchAlgorithmException
      */
     private static String getKeyAlias() throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException {
-        BufferedInputStream bis = new BufferedInputStream(BaseUtils.getStream(WechatConstant.certUrl));
+        BufferedInputStream bis = new BufferedInputStream(CodeFileUtils.getStream(WechatConstant.certUrl));
         KeyStore ks = KeyStore.getInstance("PKCS12");
         ks.load(bis, WechatConstant.wechatMchid.toCharArray());
         String keyAlias = null;
@@ -103,32 +105,10 @@ public class WechatUtils {
         return (X509Certificate) cert;
     }
 
-    /**
-     * 从私钥文件读取私钥
-     * @param filename
-     * @return privateKey
-     * @throws IOException
-     */
-    public static PrivateKey getPrivateKey(String filename) throws IOException {
-        String content = new String(BaseUtils.getBytes(filename), StandardCharsets.UTF_8);
-        try {
-            String privateKey = content.replace("-----BEGIN PRIVATE KEY-----", "")
-                    .replace("-----END PRIVATE KEY-----", "")
-                    .replaceAll("\\s+", "");
-
-            KeyFactory kf = KeyFactory.getInstance("RSA");
-            return kf.generatePrivate(
-                    new PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKey)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("当前Java环境不支持RSA", e);
-        } catch (InvalidKeySpecException e) {
-            throw new RuntimeException("无效的密钥格式");
-        }
-    }
-
 
     /**
      * 获取平台证书Map
+     *
      * @return map
      * @throws ParseException
      * @throws CertificateException
@@ -171,6 +151,7 @@ public class WechatUtils {
 
     /**
      * 使用v3key进行AES解密
+     *
      * @param associatedData
      * @param nonce
      * @param ciphertext
@@ -180,7 +161,7 @@ public class WechatUtils {
     public static String decryptToString(String associatedData, String nonce, String ciphertext) {
         try {
             byte[] associatedDataByte = associatedData.getBytes(StandardCharsets.UTF_8);
-            byte[] nonceByte =nonce.getBytes(StandardCharsets.UTF_8);
+            byte[] nonceByte = nonce.getBytes(StandardCharsets.UTF_8);
             byte[] apiV3Key = WechatConstant.v3key.getBytes(StandardCharsets.UTF_8);
             SecretKeySpec key = new SecretKeySpec(apiV3Key, WechatConstant.AES_NAME);
             GCMParameterSpec spec = new GCMParameterSpec(WechatConstant.GCM_LENGTH, nonceByte);
@@ -192,7 +173,7 @@ public class WechatUtils {
             throw new IllegalStateException(e);
         } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
             throw new IllegalArgumentException(e);
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new CodeException("AES解密失败！");
         }
     }

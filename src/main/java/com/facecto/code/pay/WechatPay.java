@@ -2,10 +2,12 @@ package com.facecto.code.pay;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.facecto.code.pay.business.entity.BusinessPreOrder;
+import com.facecto.code.base.util.CodeDateTimeUtils;
+import com.facecto.code.base.util.CodeStringUtils;
+import com.facecto.code.pay.business.entity.OutOrderForm;
+import com.facecto.code.pay.business.entity.OutRefundForm;
 import com.facecto.code.pay.wechat.config.WechatConstant;
 import com.facecto.code.pay.wechat.entity.*;
-import com.facecto.code.pay.wechat.util.BaseUtils;
 import com.facecto.code.pay.wechat.util.WechatHttp;
 import com.facecto.code.pay.wechat.util.WechatUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -27,32 +29,34 @@ public class WechatPay {
     public void init() {
         wechatPay = this;
     }
+
     /**
      * 用户登录：用code换用户OpenId
+     *
      * @param code
      * @return openId
      */
     public String getOpenId(String code) {
         JSONObject object = WechatHttp.httpGet(getOpenIdUrl(code), "", JSONObject.class);
-        System.out.println(object);
         return object.getString("openid");
     }
 
     /**
      * 付款流程：生成小程序调起支付API所需参数
-     * @param preOrder JSAPI下单信息
-     * @return 小程序所需参数
+     *
+     * @param outOrderForm 商户订单
+     * @return 参数组
      * @throws Exception
      */
-    public PaymentParam handlePaymentParam(BusinessPreOrder preOrder) throws Exception {
-        OrderCreateJsapi orderCreateJsapi = orderCreate(preOrder);
+    public PaymentParam handlePaymentParam(OutOrderForm outOrderForm) throws Exception {
+        OrderCreateJsapi orderCreateJsapi = orderCreate(outOrderForm);
         String s = JSON.toJSONString(orderCreateJsapi);
         OrderCreateJsapiReturn r = WechatHttp.httpPost(WechatConstant.URL_JSAPI_ORDER, s, OrderCreateJsapiReturn.class);
         PaymentParam param = new PaymentParam()
                 .setAppid(WechatConstant.wechatAppid)
                 .setPackages("prepay_id=" + r.getPrepayId())
-                .setTimeStamp(BaseUtils.getCurrentTimeStamp())
-                .setNonceStr(BaseUtils.getNonceStr())
+                .setTimeStamp(CodeDateTimeUtils.getCurrentTimeStamp())
+                .setNonceStr(CodeStringUtils.getNonceStr())
                 .setSignType(WechatConstant.SIGN_TYPE);
         String jsapiSign = WechatHttp.getJsapiSign(param.getTimeStamp(), param.getNonceStr(), param.getPackages());
         param.setPaySign(jsapiSign);
@@ -62,43 +66,40 @@ public class WechatPay {
 
     /**
      * 付款流程：处理支付成功通知
+     *
      * @param notice 微信发起的通知
      * @return 通知体
      */
     public OrderNotice handleOrderNotice(OrderNotice notice) {
-        OrderNoticeResourceOrigin origin =null;
-        if(notice!=null){
-            if(notice.getEventType().equals(WechatConstant.ORDER_NOTICE_SUCCESS)){
+        OrderNoticeResourceOrigin origin = null;
+        if (notice != null) {
+            if (notice.getEventType().equals(WechatConstant.ORDER_NOTICE_SUCCESS)) {
                 String s = WechatUtils.decryptToString(notice.getResource().getAssociatedData(),
                         notice.getResource().getNonce(), notice.getResource().getCiphertext());
                 origin = JSONObject.parseObject(s, OrderNoticeResourceOrigin.class);
                 notice.setOrigin(origin);
             }
         }
-
         return notice;
-
     }
 
 
     /**
      * 退款流程：发起退款并获得退款结果
-     * @param outTradeNo 商户订单号
-     * @param reason 退款原因
-     * @param refund 退款金额
-     * @param total 订单金额
+     *
+     * @param outRefundForm 商户退款单
      * @return RefundCreateReturn
      */
-    public RefundCreateReturn handleRefund(String outTradeNo,String reason,int refund, int total){
-        RefundCreate refundCreate = refundCreate(outTradeNo, reason,refund,total);
+    public RefundCreateReturn handleRefund(OutRefundForm outRefundForm) {
+        RefundCreate refundCreate = refundCreate(outRefundForm);
         String s = JSON.toJSONString(refundCreate);
         RefundCreateReturn r = WechatHttp.httpPost(WechatConstant.URL_JSAPI_REFUND, s, RefundCreateReturn.class);
-        if(r.getStatusCode()!=WechatConstant.STATUS_CODE_OK){
-            r.setOutTradeNo(outTradeNo);
-            r.getAmount().setRefund(refund);
-            r.getAmount().setTotal(total);
+        if (r.getStatusCode() != WechatConstant.STATUS_CODE_OK) {
+            r.setOutTradeNo(outRefundForm.getOutTradeNo());
+            r.getAmount().setRefund(outRefundForm.getRefund());
+            r.getAmount().setTotal(outRefundForm.getTotal());
             r.setOutRefundNo(refundCreate.getOutRefundNo());
-        }else {
+        } else {
             r.setStatusCode(0);
             r.setMessage(WechatConstant.SUCCESS);
         }
@@ -108,13 +109,14 @@ public class WechatPay {
 
     /**
      * 退款流程 ：处理退款通知
+     *
      * @param notice
      * @return RefundNotice
      */
     public RefundNotice handleRefundNotice(RefundNotice notice) {
-        RefundNoticeResourceOrigin origin =null;
-        if(notice!=null){
-            if(notice.getEventType().equals(WechatConstant.REFUND_NOTICE_SUCCESS)){
+        RefundNoticeResourceOrigin origin = null;
+        if (notice != null) {
+            if (notice.getEventType().equals(WechatConstant.REFUND_NOTICE_SUCCESS)) {
                 String s = WechatUtils.decryptToString(notice.getResource().getAssociatedData(),
                         notice.getResource().getNonce(), notice.getResource().getCiphertext());
                 origin = JSONObject.parseObject(s, RefundNoticeResourceOrigin.class);
@@ -126,6 +128,7 @@ public class WechatPay {
 
     /**
      * 封装获取opernId的url
+     *
      * @param code
      * @return url
      */
@@ -138,48 +141,46 @@ public class WechatPay {
 
     /**
      * 封装原始下单信息（JSAPI下单所需信息）
-     * @param businessPreOrder
-     * @return OrderCreateJsapi
+     *
+     * @param outOrderForm 商户订单
+     * @return 预订单
      */
-    private OrderCreateJsapi orderCreate(BusinessPreOrder businessPreOrder) {
+    private OrderCreateJsapi orderCreate(OutOrderForm outOrderForm) {
         AmountOrder amount = new AmountOrder()
                 .setCurrency(WechatConstant.CURRENCY)
-                .setTotal(businessPreOrder.getTotalFee());
+                .setTotal(outOrderForm.getTotal());
 
         OrderCreateJsapi order = new OrderCreateJsapi()
                 .setAppid(WechatConstant.wechatAppid)
                 .setMchid(WechatConstant.wechatMchid)
-                .setDescription(businessPreOrder.getGoods())
-                .setOutTradeNo(businessPreOrder.getOutTradeNo())
+                .setDescription(outOrderForm.getGoodInfo())
+                .setOutTradeNo(outOrderForm.getOutTradeNo())
                 .setTimeExpire(null)
-                .setAttach(businessPreOrder.getOutTradeNo())
+                .setAttach(outOrderForm.getAttach())
                 .setNotifyUrl(WechatConstant.orderNotifyUrl)
                 .setAmount(amount)
-                .setPayer(businessPreOrder.getPayer());
+                .setPayer(outOrderForm.getPayer());
         return order;
     }
 
     /**
      * 生成退款信息
-     * @param outTradeNo
-     * @param reason
-     * @param refund
-     * @param total
+     *
+     * @param outRefundForm 退款信息
      * @return RefundCreate
      */
-    private RefundCreate refundCreate(String outTradeNo,String reason,int refund, int total){
+    private RefundCreate refundCreate(OutRefundForm outRefundForm) {
         AmountRefund amount = new AmountRefund()
-                .setRefund(refund)
-                .setTotal(total)
+                .setRefund(outRefundForm.getRefund())
+                .setTotal(outRefundForm.getTotal())
                 .setCurrency(WechatConstant.CURRENCY);
         RefundCreate refundCreate = new RefundCreate()
-                .setOutRefundNo(BaseUtils.getOrderNo())
+                .setOutRefundNo(outRefundForm.getOutRefundNo())
                 .setAmount(amount)
                 .setNotifyUrl(WechatConstant.refundNotifyUrl)
-                .setOutTradeNo(outTradeNo)
-                .setReason(reason)
-                .setFundsAccount(WechatConstant.REFUND_ACCOUNT)
-                ;
+                .setOutTradeNo(outRefundForm.getOutTradeNo())
+                .setReason(outRefundForm.getReason())
+                .setFundsAccount(WechatConstant.REFUND_ACCOUNT);
         return refundCreate;
     }
 }
