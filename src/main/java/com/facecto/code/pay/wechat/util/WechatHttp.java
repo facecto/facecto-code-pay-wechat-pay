@@ -43,13 +43,16 @@ public class WechatHttp {
         try {
             HttpResponse response = getGetResponse(url, json);
             int statusCode = response.getStatusLine().getStatusCode();
-            String result = null;
+            String result = EntityUtils.toString(response.getEntity(), "UTF-8");
             if (statusCode == WechatConstant.STATUS_CODE_OK) {
-                result = EntityUtils.toString(response.getEntity(), "UTF-8");
+                return getTbyResult(t, statusCode, result, t.newInstance());
             }
-            return getTbyResult(t, statusCode, result, t.newInstance());
+            else {
+                JSONObject o = JSONObject.parseObject(result, JSONObject.class);
+                throw new CodeException(o.getString("code") + ":" + o.getString("message"));
+            }
         } catch (Exception e) {
-            throw new CodeException("执行http请求失败！");
+            throw new CodeException(e.getMessage());
         }
     }
 
@@ -66,13 +69,15 @@ public class WechatHttp {
         try {
             HttpResponse response = getPostResponse(url, json);
             int statusCode = response.getStatusLine().getStatusCode();
-            String result = null;
+            String result = EntityUtils.toString(response.getEntity(), "UTF-8");
             if (statusCode == WechatConstant.STATUS_CODE_OK) {
-                result = EntityUtils.toString(response.getEntity(), "UTF-8");
+                return getTbyResult(t, statusCode, result, t.newInstance());
+            } else {
+                JSONObject o = JSONObject.parseObject(result, JSONObject.class);
+                throw new CodeException(o.getString("code") + ":" + o.getString("message"));
             }
-            return getTbyResult(t, statusCode, result, t.newInstance());
         } catch (Exception e) {
-            throw new CodeException("执行http请求失败！");
+            throw new CodeException(e.getMessage());
         }
     }
 
@@ -124,7 +129,7 @@ public class WechatHttp {
             httpClient.close();
             return response;
         } catch (Exception e) {
-            throw new CodeException("执行http请求失败！");
+            throw new CodeException(e.getMessage());
         }
     }
 
@@ -166,7 +171,7 @@ public class WechatHttp {
             httpClient.close();
             return response;
         } catch (Exception e) {
-            throw new CodeException("执行http请求失败！");
+            throw new CodeException(e.getMessage());
         }
     }
 
