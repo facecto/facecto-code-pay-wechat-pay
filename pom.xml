@@ -6,7 +6,7 @@
 
     <groupId>com.facecto.code</groupId>
     <artifactId>facecto-code-pay-wechat-pay</artifactId>
-    <version>0.3.8</version>
+    <version>0.3.9</version>
     <packaging>jar</packaging>
 
     <name> ${project.artifactId} </name>
@@ -68,12 +68,12 @@
         <dependency>
             <groupId>com.facecto.code</groupId>
             <artifactId>facecto-code-base-utils</artifactId>
-            <version>1.1.6</version>
+            <version>1.1.8</version>
         </dependency>
         <dependency>
             <groupId>com.facecto.code</groupId>
             <artifactId>facecto-code-safe-starter</artifactId>
-            <version>1.1.6</version>
+            <version>1.1.8</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
